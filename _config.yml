@@ -100,4 +100,4 @@ theme: icarus
 deploy:
   type: git
   repo: https://github.com/AshCodeWork/ashcodework.github.io.git
-  branch: gh-pages
+  branch: blog
