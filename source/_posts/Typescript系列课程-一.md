@@ -32,7 +32,6 @@ toc: true
   * 继承接口
   * 混合类型
   * 接口继承类
-* 类
 * 类型断言
 
 Typescript文档地址：[点我跳转](https://www.tslang.cn/docs/handbook/basic-types.html)
@@ -507,11 +506,103 @@ let analog = createClock(AnalogClock, 7, 32);
 
 ### 继承接口
 
+和类一样，接口也可以相互继承。 这让我们能够从一个接口里复制成员到另一个接口里，可以更灵活地将接口分割到可重用的模块里。
+
+```ts
+interface Shape {
+    color: string;
+}
+// 继承Shape接口形成一个新的接口
+interface Square extends Shape {
+    sideLength: number;
+}
+
+let square = <Square>{};
+square.color = "blue";
+square.sideLength = 10;
+```
+一个接口可以继承多个接口，创建出多个接口的合成接口。
+
+```ts
+interface 新的接口 extends 接口1, 接口2 {
+  新增的属性: 类型
+}
+```
+例子：
+
+```ts
+interface Shape {
+    color: string;
+}
+
+interface PenStroke {
+    penWidth: number;
+}
+// 继承多个接口
+interface Square extends Shape, PenStroke {
+    sideLength: number;
+}
+
+let square = <Square>{};
+square.color = "blue";
+square.sideLength = 10;
+square.penWidth = 5.0;
+```
+
 ### 混合类型
+
+一个对象可以同时做为函数和对象使用，并带有额外的属性。
+
+```ts
+interface Counter {
+    (start: number): string;
+    interval: number;
+    reset(): void;
+}
+
+function getCounter(): Counter {
+    let counter = <Counter>function (start: number) { console.log(start) };
+    counter.interval = 123;
+    counter.reset = function () { console.log('reset') };
+    return counter;
+}
+// 生成的c是一个函数，并且有额外属性
+let c = getCounter();
+c(10); // 10
+c.reset(); //reset
+c.interval = 5.0; // 5
+```
 
 ### 接口继承类
 
-## 类
+```ts
+class Control {
+    private state: any;
+}
+// 接口继承类
+interface SelectableControl extends Control {
+    select(): void;
+}
+
+class Button extends Control implements SelectableControl {
+    select() { }
+}
+
+class TextBox extends Control {
+    select() { }
+}
+
+// 错误：“Image”类型缺少“state”属性。
+// 不行的原因就在于类必须要继承一次才能再使用接口实现
+class Image implements SelectableControl {
+    select() { }
+}
+
+class Location {
+
+}
+```
+
 ## 类型断言
 
 通过类型断言这种方式可以告诉编译器，“相信我，我知道自己在干什么”。 类型断言好比其它语言里的类型转换，但是不进行特殊的数据检查和解构。 它没有运行时的影响，只是在编译阶段起作用。 TypeScript会假设你，程序员，已经进行了必须的检查。
