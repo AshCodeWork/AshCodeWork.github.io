@@ -34,6 +34,8 @@ toc: true
   * 接口继承类
 * 类型断言
 
+快速上手：[点我跳转](https://www.tslang.cn/docs/handbook/typescript-in-5-minutes.html)
+
 Typescript文档地址：[点我跳转](https://www.tslang.cn/docs/handbook/basic-types.html)
 
 练习地址：[点我跳转](https://www.tslang.cn/play/index.html)
