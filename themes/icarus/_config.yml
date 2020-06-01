@@ -3,11 +3,11 @@ version: 3.0.0
 # Icarus theme variant, can be "default" or "cyberpunk"
 variant: default
 # Path or URL to the website's logo
-logo: /img/logo.svg
+logo: /img/fish.svg
 # Page metadata configurations
 head:
     # URL or path to the website's icon
-    favicon: /img/favicon.svg
+    favicon: /img/fish.svg
     # Open Graph metadata
     # https://hexo.io/docs/helpers.html#open-graph
     open_graph:
@@ -192,12 +192,12 @@ widgets:
         # Email address for the Gravatar
         gravatar: 
         # URL or path for the follow button
-        follow_link: 'https://github.com/ppoffice'
+        follow_link: 'https://github.com/AshCodeWork/ashcodework.github.io'
         # Links to be shown on the bottom of the profile widget
         social_links:
             Github:
                 icon: fab fa-github
-                url: 'https://github.com/ppoffice'
+                url: 'https://github.com/AshCodeWork/ashcodework.github.io'
             # Facebook:
             #     icon: fab fa-facebook
             #     url: 'https://facebook.com'

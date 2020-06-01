@@ -1,7 +1,9 @@
 ---
 title: Typescript系列课程(一)
 date: 2020-05-26 23:21:17
-tags: Typescript
+tags: 
+    - Typescript
+categories: Typescript
 toc: true
 ---
 
@@ -18,9 +20,7 @@ toc: true
   * 元祖Tuple
   * 枚举
   * Never
-* 变量声明
-    * 简单的变量定义
-    * 方法声明
+* 类型断言
 * 接口
   * 一个例子
   * 可选属性
@@ -32,7 +32,6 @@ toc: true
   * 继承接口
   * 混合类型
   * 接口继承类
-* 类型断言
 
 快速上手：[点我跳转](https://www.tslang.cn/docs/handbook/typescript-in-5-minutes.html)
 
@@ -215,9 +214,32 @@ function infiniteLoop(): never {
     }
 }
 ```
+## 类型断言
+
+通过类型断言这种方式可以告诉编译器，“相信我，我知道自己在干什么”。 类型断言好比其它语言里的类型转换，但是不进行特殊的数据检查和解构。 它没有运行时的影响，只是在编译阶段起作用。 TypeScript会假设你，程序员，已经进行了必须的检查。
+
+有两种写法：
+
+写法一：尖括号
+```ts
+let someValue: any = "this is a string";
+
+let strLength: number = (<string>someValue).length;
+```
+写法二：`as`（推荐）
+
+```ts
+let someValue: any = "this is a string";
+
+let strLength: number = (someValue as string).length;
+```
+当你在TypeScript里使用JSX时，只有 `as`语法断言是被允许的。
+
 ## 接口
 
 在TypeScript里，接口的作用就是为这些类型命名和为你的代码或第三方代码定义契约。
+
+### 基本使用
 
 举个例子：
 
@@ -230,6 +252,18 @@ let myObj = { size: 10, label: "Size 10 Object" };
 printLabel(myObj);
 ```
 类型检查器会查看`printLabel`的调用。 `printLabel`有一个参数，并要求这个对象参数有一个名为`label`类型为`string`的属性。
+
+这个时候我们就可以使用接口写法代替上面的写法
+
+基本接口写法：
+```ts
+interface 接口名 {
+  属性名: 类型;
+}
+```
+注意： 如果使用这个接口的话，不能传入额外的属性，如果需要传入额外的属性，参考后面的**[额外属性检查](./#额外属性检查)**
+
+通过接口写法我们可以把上面的例子改成下面这样：
 
 ```ts
 // 定义一个名为LabelledValue的接口
@@ -333,7 +367,7 @@ interface SquareConfig {
     width?: number;
 }
 
-function createSquare(config: SquareConfig): { color: string; area: number } {
+function createSquare(config: SquareConfig): void {
     console.log(config.color) //undefined
     console.log(config.width) // 100
 }
@@ -604,24 +638,3 @@ class Location {
 
 }
 ```
-
-## 类型断言
-
-通过类型断言这种方式可以告诉编译器，“相信我，我知道自己在干什么”。 类型断言好比其它语言里的类型转换，但是不进行特殊的数据检查和解构。 它没有运行时的影响，只是在编译阶段起作用。 TypeScript会假设你，程序员，已经进行了必须的检查。
-
-有两种写法：
-
-写法一：尖括号
-```ts
-let someValue: any = "this is a string";
-
-let strLength: number = (<string>someValue).length;
-```
-写法二：`as`（推荐）
-
-```ts
-let someValue: any = "this is a string";
-
-let strLength: number = (someValue as string).length;
-```
-当你在TypeScript里使用JSX时，只有 `as`语法断言是被允许的。
