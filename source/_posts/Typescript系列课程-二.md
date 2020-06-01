@@ -27,11 +27,9 @@ toc: true
   * 函数类型
     * 为函数定义类型
     * 书写完整函数类型
-    * 推断类型
   * 可选参数和默认参数
   * 剩余参数
   * this
-    * this和箭头函数
     * this参数
     * this参数在回调函数里
   * 重载 
@@ -514,4 +512,255 @@ interface Point3d extends Point {
 }
 
 let point3d: Point3d = {x: 1, y: 2, z: 3};
+```
+
+
+## 函数
+
+TypeScript为JavaScript函数添加了额外的功能，让我们可以更容易地使用。
+
+### 函数类型
+#### 为函数定义类型
+
+```ts
+// 带函数名的函数
+function add(x: number, y: number): number {
+    return x + y;
+}
+// 赋值的匿名函数
+let myAdd = function(x: number, y: number): number { return x + y; };
+```
+
+我们可以给每个参数添加类型之后再为函数本身添加返回值类型。 TypeScript能够根据返回语句自动推断出返回值类型，因此我们通常省略它。
+
+```ts
+// 不带返回值的写法
+let myAdd = function(x: number, y: number){ return x + y; };
+```
+
+#### 书写完整函数类型
+
+写法：
+
+```ts
+(参数名: 类型, 参数名: 类型) => 返回值类型
+```
+例子：
+
+```ts
+// 这个写法和上面为函数定义类型的写法效果实际上是一样的
+let myAdd: (x: number, y: number) => number =
+    function(x: number, y: number): number { return x + y; };
+```
+只要参数类型是匹配的，那么就认为它是有效的函数类型，而不在乎参数名是否正确。
+```ts
+// baseValue -> x  increment-> y
+let myAdd: (baseValue: number, increment: number) => number =
+    function(x: number, y: number): number { return x + y; };
+```
+### 可选参数和默认参数
+
+传递给一个函数的参数个数必须与函数期望的参数个数一致。如果有的参数是可传可不传的则使用可选参数
+
+#### 可选参数
+
+写法：
+```ts
+function (参数? : 类型) {
+    //...
+}
+```
+例子：
+
+```ts
+function buildName(firstName: string, lastName?: string) {
+    if (lastName)
+        return firstName + " " + lastName;
+    else
+        return firstName;
+}
+
+let result1 = buildName("Bob");  //ok
+let result2 = buildName("Bob", "Adams", "Sr.");  // error, 参数多了
+let result3 = buildName("Bob", "Adams");  // ok
+```
+#### 默认值
+
+可以给函数参数设置默认值，就跟es6一样
+
+写法：
+```ts
+function (参数=值) {
+    //...
+}
+```
+例子：
+
+```ts
+function buildName(firstName: string, lastName = "Smith") {
+    return firstName + " " + lastName;
+}
+
+let result1 = buildName("Bob"); // ok, returns "Bob Smith"
+let result2 = buildName("Bob", undefined);// ok, returns "Bob Smith"
+let result3 = buildName("Bob", "Adams", "Sr.");  // error, 参数多了
+let result4 = buildName("Bob", "Adams"); // ok
+```
+### 剩余参数
+
+```ts
+function buildName(firstName: string, ...restOfName: string[]) {
+    // 收集剩余参数到restOfName里
+  return firstName + " " + restOfName.join(" ");
+}
+
+let employeeName = buildName("Joseph", "Samuel", "Lucas", "MacKinzie"); //Joseph Samuel Lucas MacKinzie
+```
+### this
+#### this参数
+
+```ts
+// 定义一张牌的接口
+interface Card {
+    suit: string;
+    card: number;
+}
+// 定义一副牌的接口
+interface Deck {
+    suits: string[];
+    cards: number[];
+    createCardPicker(this: Deck): () => Card;
+}
+// 设置一副牌
+let deck: Deck = {
+    suits: ["红桃", "黑桃", "梅花", "方块"], //花色
+    cards: Array(52), //牌
+    // 注意:该函数现在显式地指定它的被调用方必须是Deck类型，指定this类型为Deck
+    createCardPicker: function(this: Deck) {
+        return () => {
+            let pickedCard = Math.floor(Math.random() * 52);
+            let pickedSuit = Math.floor(pickedCard / 13);
+
+            return {suit: this.suits[pickedSuit], card: pickedCard % 13};
+        }
+    }
+}
+
+let cardPicker = deck.createCardPicker();
+let pickedCard = cardPicker(); //抽到排
+
+alert("card: " + pickedCard.card + " of " + pickedCard.suit);
+```
+
+#### this参数在回调函数里
+
+当你将一个函数传递到某个库函数里稍后会被调用时，你可能会看到this报错
+
+```ts
+interface UIElement {
+    addClickListener(onclick: (this: void, e: Event) => void): void;
+}
+
+let uiElement:UIElement
+class Handler {
+    info: string;
+    onClickBad(this: Handler, e: Event) {
+        // oops, used this here. using this callback would crash at runtime
+        this.info = e.message;
+    }
+}
+let h = new Handler();
+uiElement.addClickListener(h.onClickBad); // error! 认为这个this的类型不匹配
+```
+修改
+
+```ts
+interface UIElement {
+    addClickListener(onclick: (this: void, e: Event) => void): void;
+}
+
+let uiElement:UIElement
+class Handler {
+    info: string;
+    onClickBad = (e: Event) => {
+        // 改为箭头函数即可，否则必须传入this为void类型
+        this.info = e.message;
+    }
+}
+let h = new Handler();
+uiElement.addClickListener(h.onClickBad);
+```
+
+### 重载 
+
+为同一个函数提供多个函数类型定义来进行函数重载。 编译器会根据这个列表去处理函数的调用。
+
+举个例子：有个方法，传入数组，则从数组中抽一张牌。如果传入一个数字，则返回这个数字对应的花色和牌面数字。
+
+下面这个例子没有使用重载
+```ts
+let suits = ["红桃", "黑桃", "梅花", "方块"];
+
+function pickCard(x): any {
+    // Check to see if we're working with an object/array
+    // if so, they gave us the deck and we'll pick the card
+    if (typeof x == "object") {
+        let pickedCard = Math.floor(Math.random() * x.length);
+        return pickedCard;
+    }
+    // Otherwise just let them pick the card
+    else if (typeof x == "number") {
+        let pickedSuit = Math.floor(x / 13);
+        return { suit: suits[pickedSuit], card: x % 13 };
+    }
+}
+
+let myDeck = [{ suit: "方块", card: 2 }, { suit: "黑桃", card: 10 }, { suit: "红桃", card: 4 }];
+// 在调用方法的时候不会给有类型提示
+let pickedCard1 = myDeck[pickCard(myDeck)];
+alert("card: " + pickedCard1.card + " of " + pickedCard1.suit);
+// 在调用方法的时候不会给有类型提示
+let pickedCard2 = pickCard(15);
+alert("card: " + pickedCard2.card + " of " + pickedCard2.suit);
+```
+使用重载：
+
+```ts
+let suits = ["红桃", "黑桃", "梅花", "方块"];
+
+function pickCard(x: {suit: string; card: number; }[]): number; //重载，如果传入一个牌的对象，则返回值张牌在牌堆里的下标
+function pickCard(x: number): {suit: string; card: number; }; //重载，如果传入一个数字，则返回一张对应花色和数字的牌
+function pickCard(x): any {
+    // Check to see if we're working with an object/array
+    // if so, they gave us the deck and we'll pick the card
+    if (typeof x == "object") {
+        let pickedCard = Math.floor(Math.random() * x.length);
+        return pickedCard;
+    }
+    // Otherwise just let them pick the card
+    else if (typeof x == "number") {
+        let pickedSuit = Math.floor(x / 13);
+        return { suit: suits[pickedSuit], card: x % 13 };
+    }
+}
+
+let myDeck = [{ suit: "方块", card: 2 }, { suit: "黑桃", card: 10 }, { suit: "红桃", card: 4 }];
+// 在调用方法的时候会给有类型提示 
+/*
+function pickCard(x: {
+    suit: string;
+    card: number;
+}[]): number (+1 overload)
+*/
+let pickedCard1 = myDeck[pickCard(myDeck)];
+alert("card: " + pickedCard1.card + " of " + pickedCard1.suit);
+// 在调用方法的时候会给有类型提示
+/*
+function pickCard(x: number): {
+    suit: string;
+    card: number;
+} (+1 overload)
+*/
+let pickedCard2 = pickCard(15);
+alert("card: " + pickedCard2.card + " of " + pickedCard2.suit);
 ```
