@@ -764,3 +764,23 @@ function pickCard(x: number): {
 let pickedCard2 = pickCard(15);
 alert("card: " + pickedCard2.card + " of " + pickedCard2.suit);
 ```
+
+## 泛型  
+
+在像C#和Java这样的语言中，可以使用泛型来创建可重用的组件，一个组件可以支持多种类型的数据。 这样用户就可以以自己的数据类型来使用组件。
+
+### 泛型之Hello World
+
+```ts
+// 假设我们想使用数字类型
+function identity(arg: number): number {
+    return arg;
+}
+```
+
+### 使用泛型变量
+### 泛型类型
+### 泛型类
+### 泛型约束
+#### 在泛型约束中使用类型参数
+#### 在泛型里使用类类型
