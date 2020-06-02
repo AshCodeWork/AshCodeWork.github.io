@@ -776,11 +776,195 @@ alert("card: " + pickedCard2.card + " of " + pickedCard2.suit);
 function identity(arg: number): number {
     return arg;
 }
+// 我们又想使用字符串类型
+function identity(arg: string): string {
+    return arg;
+}
+```
+使用泛型一次搞定
+
+```ts
+// T代表一个类型
+function identity<T>(arg: T): T {
+    return arg;
+}
+```
+### 使用泛型变量
+
+还看上面的例子。如果我们想同时打印出arg的长度。
+
+```ts
+function loggingIdentity<T>(arg: T): T {
+    console.log(arg.length);  // Error: T doesn't have .length
+    return arg;
+}
+```
+现在假设我们想操作`T`类型的数组而不直接是`T`。由于我们操作的是数组，所以`.length`属性是应该存在的。
+```ts
+function loggingIdentity<T>(arg: T[]): T[] {
+    console.log(arg.length);  // Array has a .length, so no more error
+    return arg;
+}
+// 下面这个写法也可以
+function loggingIdentity<T>(arg: Array<T>): Array<T> {
+    console.log(arg.length);  // Array has a .length, so no more error
+    return arg;
+}
 ```
 
-### 使用泛型变量
 ### 泛型类型
+
+写法：
+```ts
+interface 泛型接口名<T> {
+    (参数名: T): T;
+}
+let 变量: 泛型接口<类型> = 方法
+// 传入的类型会替代定义的接口中的T
+```
+
+```ts
+interface GenericIdentityFn<T> {
+    (arg: T): T;
+}
+
+function identity<T>(arg: T): T {
+    return arg;
+}
+
+// 使用接口定义方法
+let myIdentity: GenericIdentityFn<number> = identity;
+```
+除了泛型接口，我们还可以创建泛型类。 注意，无法创建泛型枚举和泛型命名空间。
+
 ### 泛型类
+
+泛型类看上去与泛型接口差不多。 泛型类使用（ `<>`）括起泛型类型，跟在类名后面。
+
+```ts
+class 类名<T> {
+    //类内部根据需要引入T类型
+    属性名: T,
+    方法名: (参数名: T) => T
+}
+```
+例子：
+
+```ts
+class GenericNumber<T> {
+    zeroValue: T;
+    add: (x: T, y: T) => T;
+}
+
+let myGenericNumber = new GenericNumber<number>();
+myGenericNumber.zeroValue = 0;
+myGenericNumber.add = function(x, y) { return x + y; };
+
+console.log(myGenericNumber.add(2,3)) //5
+```
+
 ### 泛型约束
+
+泛型约束就是给泛型增加额外的属性，使用这个泛型传入的值必须有对应的属性才能使用。简单的说就是约束传入的泛型。
+
+写法：
+
+```ts
+// T 拥有了接口约束的属性，同时也约束了传入的值必须有对应的属性
+<T extends 接口>
+```
+
+在 loggingIdentity例子中，我们想访问arg的length属性，但是编译器并不能证明每种类型都有length属性，所以就报错了。
+```ts
+function loggingIdentity<T>(arg: T): T {
+    console.log(arg.length);  // Error: T doesn't have .length
+    return arg;
+}
+```
+使用泛型约束改写一下
+
+```ts
+interface Lengthwise {
+    length: number;
+}
+
+function loggingIdentity<T extends Lengthwise>(arg: T): T {
+    console.log(arg.length);  // Now we know it has a .length property, so no more error
+    return arg;
+}
+// 现在这个泛型函数被定义了约束，因此它不再是适用于任意类型：
+loggingIdentity(3);  // Error, number doesn't have a .length property
+
+// 我们需要传入符合约束类型的值，必须包含必须的属性：
+loggingIdentity({length: 10, value: 3}); //ok
+```
+
 #### 在泛型约束中使用类型参数
+
+你可以声明一个类型参数，且它被另一个类型参数所约束。
+
+```ts
+// 传入的类型K被T约束
+function getProperty(obj: T, key: K) {
+    return obj[key];
+}
+
+let x = { a: 1, b: 2, c: 3, d: 4 };
+
+getProperty(x, "a"); // okay
+getProperty(x, "m"); // error: Argument of type 'm' isn't assignable to 'a' | 'b' | 'c' | 'd'.
+```
+
 #### 在泛型里使用类类型
+
+在TypeScript使用泛型创建工厂函数时，需要引用构造函数的类类型。比如：
+
+```ts
+// 定义一个方法，接受一个实例化之后类型为T的类作为参数，返回值是T
+function create<T>(c: {new(): T; }): T {
+    return new c();
+}
+
+interface Animal {
+    name: string,
+    move: (distance: number) => void
+}
+
+class Dog {
+    name: 'dog'
+    move(x) {
+        console.log('move: ' + x + 'm')
+    }
+}
+console.log(create<Animal>(Dog))
+```
+一个更高级的例子，使用原型属性推断并约束构造函数与类实例的关系。
+
+```ts
+class BeeKeeper {
+    hasMask: boolean;
+}
+
+class ZooKeeper {
+    nametag: string;
+}
+
+class Animal {
+    numLegs: number;
+}
+
+class Bee extends Animal {
+    keeper: BeeKeeper;
+}
+
+class Lion extends Animal {
+    keeper: ZooKeeper;
+}
+
+function createInstance<A extends Animal>(c: new () => A): A {
+    return new c();
+}
+
+createInstance(Lion).keeper.nametag;  // 会报错nametag 不能是undefined
+createInstance(Bee).keeper.hasMask;   // 会报错 hasMask 不能是undefined
+```
