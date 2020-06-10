@@ -11386,6 +11386,10 @@ figure.highlight .section {
     padding: 1.5rem 1rem;
   }
 }
+.is-sticky #toc {
+  max-height: 90vh;
+  overflow-y: scroll;
+}
 body {
   counter-reset: card;
 }
