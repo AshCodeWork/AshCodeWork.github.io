@@ -17,7 +17,7 @@ toc: true
   * Void
   * Null 和 Undefined
   * Object
-  * 元祖Tuple
+  * 元组Tuple
   * 枚举
   * Never
 * 类型断言
@@ -148,7 +148,7 @@ create(undefined); // Error
 create(); //Error
 ```
 
-### 元祖Tuple
+### 元组Tuple
 
 元组类型允许表示一个已知元素数量和类型的数组，各元素的类型不必相同。 比如，你可以定义一对值分别为 string和number类型的元组。
 ```ts
