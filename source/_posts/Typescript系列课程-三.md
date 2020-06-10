@@ -33,7 +33,7 @@ toc: true
   * 类
     * 类的私有成员和受保护成员
   * 泛型
-* 高级类型
+* 高级类型（上）
   * 交叉类型（Intersection Types）
   * 联合类型（Union Types）
   * 类型保护与区分类型（Type Guards and Differentiating Types）
@@ -43,18 +43,6 @@ toc: true
   * 可以为null的类型
     * 可选参数和可选属性
     * 类型保护和类型断言
-  * 类型别名
-    * 接口 vs. 类型别名
-  * 字符串字面量类型
-  * 数字字面量类型
-  * 枚举成员类型
-  * 可辨识联合（Discriminated Unions）
-    * 完整性检查
-  * 多态的 this类型
-  * 索引类型（Index types）
-    * 索引类型和字符串索引签名
-  * 映射类型
-    * 由映射类型进行推断
 
 
 快速上手：[点我跳转](https://www.tslang.cn/docs/handbook/typescript-in-5-minutes.html)
@@ -688,18 +676,126 @@ typeof v !== "typename"
 // "typename"必须是 "number"， "string"， "boolean"或 "symbol"
 ```
 #### instanceof类型保护
+
+instanceof类型保护是通过构造函数来细化类型的一种方式。 
+
+instanceof的右侧要求是一个构造函数，TypeScript将细化为：
+1. 此构造函数的 prototype属性的类型，如果它的类型不为 any的话
+2. 构造签名所返回的类型的联合
+
+比如，我们借鉴一下之前字符串填充的例子：
+
+```ts
+// 定义一个接口
+interface Padder {
+    getPaddingString(): string
+}
+// 空格padder
+class SpaceRepeatingPadder implements Padder {
+    constructor(private numSpaces: number) { }
+    getPaddingString() {
+        return Array(this.numSpaces + 1).join(" ");
+    }
+}
+// 字符串padder
+class StringPadder implements Padder {
+    constructor(private value: string) { }
+    getPaddingString() {
+        return this.value;
+    }
+}
+// 随机选择使用空格padder还是字符串padder
+function getRandomPadder() {
+    return Math.random() < 0.5 ?
+        new SpaceRepeatingPadder(4) :
+        new StringPadder("  ");
+}
+
+// 类型为SpaceRepeatingPadder | StringPadder
+let padder: Padder = getRandomPadder();
+
+if (padder instanceof SpaceRepeatingPadder) {
+    padder; // 类型细化为'SpaceRepeatingPadder'
+}
+if (padder instanceof StringPadder) {
+    padder; // 类型细化为'StringPadder'
+}
+```
 ### 可以为null的类型
+
+TypeScript具有两种特殊的类型， `null`和 `undefined`，它们分别具有值`null`和`undefined`. 我们在[基础类型](./Basic Types.md)一节里已经做过简要说明。 默认情况下，类型检查器认为 `null`与 `undefined`可以赋值给任何类型。 `null`与 `undefined`是所有其它类型的一个有效值。 
+
+使用`--strictNullChecks`标记可以解决此错误：当你声明一个变量时，它不会自动地包含 `null`或 `undefined`。
+
+```ts
+let s = "foo";
+s = null; // 错误, 'null'不能赋值给'string'
+let sn: string | null = "bar";
+sn = null; // 可以
+
+sn = undefined; // error, 'undefined'不能赋值给'string | null'
+```
+
 #### 可选参数和可选属性
+
+使用了 `--strictNullChecks`，可选参数会被自动地加上 `| undefined:`
+
+```ts
+function f(x: number, y?: number) {
+    return x + (y || 0);
+}
+f(1, 2);
+f(1);
+f(1, undefined); //第二个参数是可选参数，在严格模式下会自动增加undefined类型
+f(1, null); // error, 'null' is not assignable to 'number | undefined'
+```
+可选属性也会有同样的处理：
+
+```ts
+class C {
+    a: number;
+    b?: number; //b 是可选参数，在严格模式下会自动增加undefined类型
+}
+let c = new C();
+c.a = 12;
+c.a = undefined; // error, 'undefined' is not assignable to 'number'
+c.b = 13;
+c.b = undefined; // ok
+c.b = null; // error, 'null' is not assignable to 'number | undefined'
+```
 #### 类型保护和类型断言
-### 类型别名
-#### 接口 vs. 类型别名
-### 字符串字面量类型
-### 数字字面量类型
-### 枚举成员类型
-### 可辨识联合（Discriminated Unions）
-#### 完整性检查
-### 多态的 this类型
-### 索引类型（Index types）
-#### 索引类型和字符串索引签名
-### 映射类型
-#### 由映射类型进行推断
+
+由于可以为`null`的类型是通过联合类型实现，那么你需要使用类型保护来去除 null。 
+幸运地是这与在JavaScript里写的代码一致：
+
+```ts
+function f(sn: string | null): string {
+    return sn || "default";
+}
+```
+如果编译器不能够去除 null或 undefined，你可以使用类型断言手动去除。 
+
+写法
+```
+需要去除的变量!
+```
+例如：
+
+```ts
+function broken(name: string | null): string {
+  function postfix(epithet: string) {
+    return name.charAt(0) + '.  the ' + epithet; // error, 'name' is possibly null
+  }
+  name = name || "Bob";
+  return postfix("great");
+}
+
+function fixed(name: string | null): string {
+  function postfix(epithet: string) {
+    // 使用类型断言
+    return name!.charAt(0) + '.  the ' + epithet; // ok
+  }
+  name = name || "Bob";
+  return postfix("great");
+}
+```
